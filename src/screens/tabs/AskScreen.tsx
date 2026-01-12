@@ -9,9 +9,13 @@
  * - Health Memory entry point
  */
 
+import Voice from '@react-native-voice/voice';
 import { useNavigation } from '@react-navigation/native';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  Alert,
+  PermissionsAndroid,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -36,7 +40,6 @@ import {
 } from '../../store/askCarebowStore';
 import { useMemoryCount } from '../../store/healthMemoryStore';
 import { colors, radius, shadows, spacing, typography } from '../../theme';
-
 const relationships = [
   { value: '', label: 'Select relationship...' },
   { value: 'father', label: 'Father' },
@@ -66,7 +69,9 @@ export default function AskCareBowScreen() {
   const [symptomInput, setSymptomInput] = useState('');
   const [showRelationshipPicker, setShowRelationshipPicker] = useState(false);
   const [inputMode, setInputMode] = useState<'text' | 'voice'>('text');
-
+  const [isListening, setIsListening] = useState(false);
+  const [recognizedText, setRecognizedText] = useState('');
+  const [baseText, setBaseText] = useState(''); // Text before voice recognition started
   // New state for image upload
   const [attachedImages, setAttachedImages] = useState<ImageAttachment[]>([]);
   const [showImageSheet, setShowImageSheet] = useState(false);
@@ -77,7 +82,134 @@ export default function AskCareBowScreen() {
   const trialDaysRemaining = useTrialDaysRemaining();
   const trialState = useTrialState();
   const canAccessPremium = useCanAccessPremiumFeatures();
+  useEffect(() => {
+    Voice.onSpeechStart = onSpeechStart;
+    Voice.onSpeechEnd = onSpeechEnd;
+    Voice.onSpeechResults = onSpeechResults;
+    Voice.onSpeechError = onSpeechError;
+    Voice.onSpeechPartialResults = onSpeechPartialResults;
+    
+    return () => {
+      Voice.destroy().then(() => {
+        Voice.removeAllListeners();
+      }).catch(() => {});
+    };
+  }, []);
 
+  const onSpeechStart = (e: any) => {
+    console.log('onSpeechStart:', e);
+    setIsListening(true);
+    setRecognizedText('');
+    // Save the current text as base text before starting recognition
+    setBaseText(symptomInput.trim());
+  };
+
+  const onSpeechEnd = (e: any) => {
+    console.log('onSpeechEnd:', e);
+    setIsListening(false);
+    // Text is already in symptomInput from onSpeechResults
+    // Clear recognized text and base text for next recording
+    setRecognizedText('');
+    setBaseText('');
+  };
+
+  const onSpeechResults = (e: any) => {
+    console.log('onSpeechResults:', e);
+    // e.value is an array of strings, get the first (most confident) result
+    if (e.value && e.value.length > 0) {
+      const text = e.value[0];
+      setRecognizedText(text);
+      // Update input field with final result
+      const trimmedNew = text.trim();
+      // Combine base text + final recognized text
+      const newText = baseText ? `${baseText} ${trimmedNew}` : trimmedNew;
+      setSymptomInput(newText);
+    }
+  };
+
+  const onSpeechPartialResults = (e: any) => {
+    console.log('onSpeechPartialResults:', e);
+    // Show partial results in real-time as user speaks
+    if (e.value && e.value.length > 0) {
+      const partialText = e.value[0];
+      setRecognizedText(partialText);
+      // Update input field in real-time to show what user is saying
+      const trimmedPartial = partialText.trim();
+      // Combine base text + new recognized text
+      const newText = baseText ? `${baseText} ${trimmedPartial}` : trimmedPartial;
+      setSymptomInput(newText);
+    }
+  };
+
+  const onSpeechError = (e: any) => {
+    console.log('onSpeechError:', e);
+    setIsListening(false);
+  };
+
+  const requestMicrophonePermission = async (): Promise<boolean> => {
+    if (Platform.OS === 'android') {
+      try {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
+          {
+            title: 'Microphone Permission',
+            message: 'CareBow needs access to your microphone for voice input.',
+            buttonNeutral: 'Ask Me Later',
+            buttonNegative: 'Cancel',
+            buttonPositive: 'OK',
+          }
+        );
+
+        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+          return true;
+        } else {
+          Alert.alert(
+            'Permission Required',
+            'Microphone permission is needed for voice input. Please enable it in your device settings.',
+            [{ text: 'OK' }]
+          );
+          return false;
+        }
+      } catch (err) {
+        console.warn('Permission request error:', err);
+        return false;
+      }
+    }
+    // iOS permissions are handled via Info.plist
+    return true;
+  };
+
+  const startRecognizing = async () => {
+    try {
+      setRecognizedText('');
+      
+      // Request permissions first
+      const hasPermission = await requestMicrophonePermission();
+      if (!hasPermission) {
+        return;
+      }
+
+      // Check if speech recognition is available
+      const isAvailable = await Voice.isAvailable();
+      if (!isAvailable) {
+        return;
+      }
+
+      await Voice.start('en-US');
+    } catch (error: any) {
+      console.log('startRecognizing error:', error);
+      setIsListening(false);
+    }
+  };
+
+  const stopRecognizing = async () => {
+    try {
+      await Voice.stop();
+      setIsListening(false);
+    } catch (error: any) {
+      console.log('stopRecognizing error:', error);
+    }
+  };
   // Health memory
   const memoryCount = useMemoryCount();
 
@@ -175,7 +307,6 @@ export default function AskCareBowScreen() {
         <Text style={styles.headerSubtitle}>
           I'll help you understand your symptoms and guide you to the right care.
         </Text>
-
         {/* Trial Banner - shown during active trial */}
         {isTrialActive && (
           <TrialBanner />
@@ -459,6 +590,17 @@ export default function AskCareBowScreen() {
                   numberOfLines={6}
                   textAlignVertical="top"
                 />
+                <TouchableOpacity
+                  style={[styles.voiceInputButton, isListening && styles.voiceInputButtonActive]}
+                  onPress={isListening ? stopRecognizing : startRecognizing}
+                  activeOpacity={0.7}
+                >
+                  <Icon
+                    name={isListening ? 'stop-circle' : 'mic'}
+                    size={20}
+                    color={isListening ? colors.error : colors.accent}
+                  />
+                </TouchableOpacity>
               </View>
 
               {/* Red Flag Warning (inline, below input) */}
@@ -475,10 +617,37 @@ export default function AskCareBowScreen() {
               </Text>
             </>
           ) : (
-            <VoiceInput
-              onTranscriptionComplete={handleTranscriptionComplete}
-              useMock={true} // Set to false and provide apiKey for real transcription
-            />
+            <View style={styles.voiceInputContainer}>
+              {/* Real-time speech recognition display */}
+              {isListening && (
+                <View style={styles.listeningIndicator}>
+                  <View style={styles.listeningDot} />
+                  <Text style={styles.listeningText}>Listening... Speak now</Text>
+                </View>
+              )}
+              
+              {/* Display recognized text in real-time */}
+              {recognizedText ? (
+                <View style={styles.recognizedTextContainer}>
+                  <Text style={styles.recognizedTextLabel}>You said:</Text>
+                  <Text style={styles.recognizedText}>{recognizedText}</Text>
+                </View>
+              ) : isListening ? (
+                <Text style={styles.waitingText}>Waiting for speech...</Text>
+              ) : null}
+
+              {/* Alternative: Use VoiceInput component */}
+              <View style={styles.voiceInputDivider}>
+                <View style={styles.dividerLine} />
+                <Text style={styles.dividerText}>OR</Text>
+                <View style={styles.dividerLine} />
+              </View>
+              
+              <VoiceInput
+                onTranscriptionComplete={handleTranscriptionComplete}
+                useMock={true} // Set to false and provide apiKey for real transcription
+              />
+            </View>
           )}
         </View>
 
@@ -855,10 +1024,29 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     paddingHorizontal: spacing.md,
     paddingTop: spacing.md,
-    paddingBottom: spacing.md,
+    paddingBottom: spacing.md + 40, // Extra padding for voice button
+    paddingRight: spacing.md + 50, // Extra padding on right for voice button
     ...typography.body,
     color: colors.textPrimary,
     minHeight: 140,
+  },
+  voiceInputButton: {
+    position: 'absolute',
+    bottom: spacing.sm,
+    right: spacing.sm,
+    width: 40,
+    height: 40,
+    borderRadius: radius.full,
+    backgroundColor: colors.accentMuted,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: colors.accent,
+    ...shadows.button,
+  },
+  voiceInputButtonActive: {
+    backgroundColor: colors.errorSoft,
+    borderColor: colors.error,
   },
   inputHint: {
     ...typography.caption,
@@ -987,5 +1175,70 @@ const styles = StyleSheet.create({
   disclaimerBold: {
     fontWeight: '700',
     color: colors.textPrimary,
+  },
+  voiceInputContainer: {
+    gap: spacing.md,
+  },
+  listeningIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    backgroundColor: colors.errorSoft,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.error,
+  },
+  listeningDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: colors.error,
+  },
+  listeningText: {
+    ...typography.label,
+    color: colors.error,
+    fontWeight: '600',
+  },
+  recognizedTextContainer: {
+    backgroundColor: colors.accentMuted,
+    borderWidth: 1,
+    borderColor: colors.accent,
+    borderRadius: radius.md,
+    padding: spacing.md,
+  },
+  recognizedTextLabel: {
+    ...typography.caption,
+    color: colors.accent,
+    marginBottom: spacing.xs,
+    fontWeight: '600',
+  },
+  recognizedText: {
+    ...typography.body,
+    color: colors.textPrimary,
+    fontStyle: 'italic',
+  },
+  waitingText: {
+    ...typography.body,
+    color: colors.textTertiary,
+    textAlign: 'center',
+    fontStyle: 'italic',
+    paddingVertical: spacing.sm,
+  },
+  voiceInputDivider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginVertical: spacing.sm,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.border,
+  },
+  dividerText: {
+    ...typography.caption,
+    color: colors.textTertiary,
   },
 });
