@@ -24,12 +24,12 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Tts from 'react-native-tts';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { ImageThumbnailRow } from '../../components/askCarebow/ImageThumbnailRow';
 import { ImageAttachment, ImageUploadBottomSheet } from '../../components/askCarebow/ImageUploadBottomSheet';
 import { RedFlagWarning, detectRedFlags } from '../../components/askCarebow/RedFlagWarning';
 import { TrialBanner, TrialSignupCard } from '../../components/askCarebow/TrialSignupCard';
-import { VoiceInput } from '../../components/askCarebow/VoiceInput';
 import type { AppNavigationProp } from '../../navigation/types';
 import {
   useAskCarebowStore,
@@ -123,6 +123,7 @@ export default function AskCareBowScreen() {
       const trimmedNew = text.trim();
       // Combine base text + final recognized text
       const newText = baseText ? `${baseText} ${trimmedNew}` : trimmedNew;
+      handleVoice(text);
       setSymptomInput(newText);
     }
   };
@@ -178,7 +179,18 @@ export default function AskCareBowScreen() {
     // iOS permissions are handled via Info.plist
     return true;
   };
-
+  const handleVoice = (text: any) => {
+    const normalizedText = text.toLowerCase().trim();  
+    if (normalizedText === "what is your name") {
+      Tts.speak("I am Carebow");
+    } else if (normalizedText === "how are you") {
+      Tts.speak("I am functioning normally.");
+    } else if (normalizedText === "what can you do") {
+      Tts.speak("I can answer all your questions for testing.");
+    } else {
+      Tts.speak("Sorry, I did not understand that.");
+    }
+  };
   const startRecognizing = async () => {
     try {
       setRecognizedText('');
@@ -642,11 +654,21 @@ export default function AskCareBowScreen() {
                 <Text style={styles.dividerText}>OR</Text>
                 <View style={styles.dividerLine} />
               </View>
-              
-              <VoiceInput
+              <TouchableOpacity 
+              style={styles.micContainer}
+              onPress={isListening ? stopRecognizing : startRecognizing}
+              >
+              <Icon
+                    name={isListening ? 'stop-circle' : 'mic'}
+                    size={20}
+                    color={isListening ? colors.error : colors.accent}
+                  />
+                  <Text style={styles.dividerText}>Press To Speak</Text>
+              </TouchableOpacity>
+              {/* <VoiceInput
                 onTranscriptionComplete={handleTranscriptionComplete}
                 useMock={true} // Set to false and provide apiKey for real transcription
-              />
+              /> */}
             </View>
           )}
         </View>
@@ -1241,4 +1263,14 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.textTertiary,
   },
+  micContainer:{
+    borderWidth: 1,
+    borderColor: colors.accent,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    alignItems:'center',
+    flexDirection:'row',
+    justifyContent:'center',
+    gap:10
+  }
 });
