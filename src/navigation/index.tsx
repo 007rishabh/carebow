@@ -3,38 +3,44 @@
  * Main navigation container with all screens
  */
 
-import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import React from 'react';
 import type { RootStackParamList } from './types';
 
 // Navigators
-import TabNavigator from './TabNavigator';
 import ProfileStackNavigator from './ProfileStackNavigator';
 import SafetyStackNavigator from './SafetyStackNavigator';
+import TabNavigator from './TabNavigator';
 
 // Screen imports
-import ConversationScreen from '../screens/ConversationScreen';
+import Login from '@/screens/Login';
+import Register from '@/screens/Register';
 import AssessmentScreen from '../screens/AssessmentScreen';
-import ScheduleScreen from '../screens/ScheduleScreen';
-import ThreadScreen from '../screens/ThreadScreen';
-import ServicesScreen from '../screens/ServicesScreen';
-import ServiceDetailsScreen from '../screens/ServiceDetailsScreen';
-import PlanDetailsScreen from '../screens/PlanDetailsScreen';
 import CheckoutScreen from '../screens/CheckoutScreen';
+import ConversationScreen from '../screens/ConversationScreen';
+import EpisodeSummaryScreen from '../screens/EpisodeSummaryScreen';
+import HealthMemoryScreen from '../screens/HealthMemoryScreen';
+import ModalScreen from '../screens/ModalScreen';
+import OrderDetailsScreen from '../screens/OrderDetailsScreen';
 import OrderSuccessScreen from '../screens/OrderSuccessScreen';
 import OrdersScreen from '../screens/OrdersScreen';
-import OrderDetailsScreen from '../screens/OrderDetailsScreen';
-import RequestsScreen from '../screens/RequestsScreen';
+import PlanDetailsScreen from '../screens/PlanDetailsScreen';
 import RequestDetailsScreen from '../screens/RequestDetailsScreen';
-import ModalScreen from '../screens/ModalScreen';
-import HealthMemoryScreen from '../screens/HealthMemoryScreen';
-import EpisodeSummaryScreen from '../screens/EpisodeSummaryScreen';
+import RequestsScreen from '../screens/RequestsScreen';
+import ScheduleScreen from '../screens/ScheduleScreen';
+import ServiceDetailsScreen from '../screens/ServiceDetailsScreen';
+import ServicesScreen from '../screens/ServicesScreen';
+import Splash from '../screens/Splash';
+import ThreadScreen from '../screens/ThreadScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function RootNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Splash" component={Splash} />
+      <Stack.Screen name="Login" component={Login} />
+      <Stack.Screen name="Register" component={Register} />
       <Stack.Screen name="MainTabs" component={TabNavigator} />
       <Stack.Screen
         name="Conversation"

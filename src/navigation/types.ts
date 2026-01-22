@@ -3,9 +3,9 @@
  * Type definitions for React Navigation
  */
 
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { CompositeScreenProps, NavigatorScreenParams } from '@react-navigation/native';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 // Root Stack Navigator
 export type RootStackParamList = {
@@ -36,6 +36,9 @@ export type RootStackParamList = {
   // New screens
   HealthMemory: undefined;
   EpisodeSummary: { episodeId: string };
+  Splash:undefined;
+  Login:undefined;
+  Register:undefined
 };
 
 // Main Tab Navigator
