@@ -4,38 +4,46 @@
  * Platform-specific polish for iOS and Android
  */
 
-import React, { useRef } from 'react';
+import { useNavigation } from "@react-navigation/native";
+import React, { useRef } from "react";
 import {
-  View,
-  Text,
+  Animated,
+  Dimensions,
+  Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
+  Text,
   TouchableOpacity,
-  Dimensions,
-  Pressable,
-  Animated,
-  Platform,
-} from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
-import type { AppNavigationProp } from '../../navigation/types';
+  View,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import type { AppNavigationProp } from "../../navigation/types";
 
-import { colors, spacing, radius, typography, shadows } from '../../theme';
-import { AppIcon, IconContainer, IconName, getIconColors } from '../../components/icons';
-import { StatusBadge, DotBadge, PopularBadge } from '../../components/ui/StatusBadge';
 import {
-  quickPickItems,
-  deviceItems,
-  carePackageItems,
-  mockUpcomingAppointment,
-  formatPrice,
-  QuickPickItem,
-  DeviceItem,
+  AppIcon,
+  getIconColors,
+  IconContainer,
+  IconName,
+} from "../../components/icons";
+import {
+  DotBadge,
+  PopularBadge,
+  StatusBadge,
+} from "../../components/ui/StatusBadge";
+import {
   CarePackageItem,
-} from '../../data/catalog';
-import { subscriptionPlans, SubscriptionPlan } from '../../data/subscriptions';
+  carePackageItems,
+  DeviceItem,
+  deviceItems,
+  mockUpcomingAppointment,
+  QuickPickItem,
+  quickPickItems,
+} from "../../data/catalog";
+import { SubscriptionPlan, subscriptionPlans } from "../../data/subscriptions";
+import { colors, shadows } from "../../theme";
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CARD_WIDTH = (SCREEN_WIDTH - 60) / 2;
 
 // =============================================================================
@@ -43,17 +51,17 @@ const CARD_WIDTH = (SCREEN_WIDTH - 60) / 2;
 // =============================================================================
 
 const SERVICE_ICONS: Record<string, IconName> = {
-  medical: 'stethoscope',
-  flask: 'lab',
-  heart: 'nurse',
-  'fitness-outline': 'oxygen_concentrator',
-  'pulse-outline': 'bpap',
-  'cloud-outline': 'cpap',
-  'heart-outline': 'cardiac_monitor',
-  'bed-outline': 'bed',
-  body: 'healthcheck',
-  water: 'lab',
-  'shield-checkmark': 'shield-check',
+  medical: "stethoscope",
+  flask: "lab",
+  heart: "nurse",
+  "fitness-outline": "oxygen_concentrator",
+  "pulse-outline": "bpap",
+  "cloud-outline": "cpap",
+  "heart-outline": "cardiac_monitor",
+  "bed-outline": "bed",
+  body: "healthcheck",
+  water: "lab",
+  "shield-checkmark": "shield-check",
 };
 
 // =============================================================================
@@ -73,7 +81,7 @@ function AnimatedPressable({
 
   const handlePressIn = () => {
     Animated.spring(scaleAnim, {
-      toValue: Platform.OS === 'ios' ? 0.97 : 0.98,
+      toValue: Platform.OS === "ios" ? 0.97 : 0.98,
       useNativeDriver: true,
       friction: 10,
       tension: 100,
@@ -90,7 +98,11 @@ function AnimatedPressable({
   };
 
   return (
-    <Pressable onPress={onPress} onPressIn={handlePressIn} onPressOut={handlePressOut}>
+    <Pressable
+      onPress={onPress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+    >
       <Animated.View style={[style, { transform: [{ scale: scaleAnim }] }]}>
         {children}
       </Animated.View>
@@ -120,7 +132,11 @@ function SectionHeader({
         {subtitle && <Text style={styles.sectionSubtitle}>{subtitle}</Text>}
       </View>
       {actionLabel && onAction && (
-        <TouchableOpacity style={styles.sectionAction} onPress={onAction} activeOpacity={0.7}>
+        <TouchableOpacity
+          style={styles.sectionAction}
+          onPress={onAction}
+          activeOpacity={0.7}
+        >
           <Text style={styles.sectionActionText}>{actionLabel}</Text>
           <AppIcon name="arrow-right" size={14} color={colors.accent} />
         </TouchableOpacity>
@@ -164,7 +180,12 @@ function EmergencyCard({ onPress }: { onPress: () => void }) {
   return (
     <AnimatedPressable onPress={onPress} style={styles.emergencyCard}>
       <View style={styles.emergencyIconWrap}>
-        <AppIcon name="shield-check" size={22} color={colors.error} fillOpacity={0.15} />
+        <AppIcon
+          name="shield-check"
+          size={22}
+          color={colors.error}
+          fillOpacity={0.15}
+        />
       </View>
       <View style={styles.emergencyTextWrap}>
         <Text style={styles.emergencyTitle}>Emergency & Safety</Text>
@@ -181,18 +202,31 @@ function EmergencyCard({ onPress }: { onPress: () => void }) {
 // QUICK SERVICE CARD
 // =============================================================================
 
-function QuickServiceCard({ item, onPress }: { item: QuickPickItem; onPress: () => void }) {
-  const iconName = SERVICE_ICONS[item.icon] || 'stethoscope';
+function QuickServiceCard({
+  item,
+  onPress,
+}: {
+  item: QuickPickItem;
+  onPress: () => void;
+}) {
+  const iconName = SERVICE_ICONS[item.icon] || "stethoscope";
   const iconColors = getIconColors(iconName);
 
   // Map tag to badge type
-  const getBadgeType = (tag: string): 'available' | 'popular' | 'verified' | '24/7' => {
+  const getBadgeType = (
+    tag: string
+  ): "available" | "popular" | "verified" | "24/7" => {
     switch (tag) {
-      case 'Available': return 'available';
-      case 'Popular': return 'popular';
-      case 'Verified': return 'verified';
-      case '24/7': return '24/7';
-      default: return 'available';
+      case "Available":
+        return "available";
+      case "Popular":
+        return "popular";
+      case "Verified":
+        return "verified";
+      case "24/7":
+        return "24/7";
+      default:
+        return "available";
     }
   };
 
@@ -202,13 +236,22 @@ function QuickServiceCard({ item, onPress }: { item: QuickPickItem; onPress: () 
         size="md"
         variant="soft"
         backgroundColor={iconColors.background}
-        withShadow={Platform.OS === 'ios'}
+        withShadow={Platform.OS === "ios"}
       >
-        <AppIcon name={iconName} size={22} color={iconColors.primary} fillOpacity={0.2} />
+        <AppIcon
+          name={iconName}
+          size={22}
+          color={iconColors.primary}
+          fillOpacity={0.2}
+        />
       </IconContainer>
 
-      <Text style={styles.quickServiceTitle} numberOfLines={1}>{item.title}</Text>
-      <Text style={styles.quickServiceSubtitle} numberOfLines={1}>{item.subtitle}</Text>
+      <Text style={styles.quickServiceTitle} numberOfLines={1}>
+        {item.title}
+      </Text>
+      <Text style={styles.quickServiceSubtitle} numberOfLines={1}>
+        {item.subtitle}
+      </Text>
 
       <View style={styles.quickServiceMeta}>
         <DotBadge type={getBadgeType(item.tag)} label={item.tag} />
@@ -232,14 +275,22 @@ function QuickServiceCard({ item, onPress }: { item: QuickPickItem; onPress: () 
 // EQUIPMENT CARD
 // =============================================================================
 
-function EquipmentCard({ item, onPress }: { item: DeviceItem; onPress: () => void }) {
-  const iconName = SERVICE_ICONS[item.icon] || 'oxygen_concentrator';
+function EquipmentCard({
+  item,
+  onPress,
+}: {
+  item: DeviceItem;
+  onPress: () => void;
+}) {
+  const iconName = SERVICE_ICONS[item.icon] || "oxygen_concentrator";
   const iconColors = getIconColors(iconName);
 
-  const getBadgeType = (type: string): 'free-delivery' | 'certified' | 'training' | 'setup' | 'info' => {
-    if (type === 'info') return 'free-delivery';
-    if (type === 'highlight') return 'certified';
-    return 'info';
+  const getBadgeType = (
+    type: string
+  ): "free-delivery" | "certified" | "training" | "setup" | "info" => {
+    if (type === "info") return "free-delivery";
+    if (type === "highlight") return "certified";
+    return "info";
   };
 
   return (
@@ -249,13 +300,20 @@ function EquipmentCard({ item, onPress }: { item: DeviceItem; onPress: () => voi
           size="lg"
           variant="soft"
           backgroundColor={iconColors.background}
-          withShadow={Platform.OS === 'ios'}
+          withShadow={Platform.OS === "ios"}
         >
-          <AppIcon name={iconName} size={28} color={iconColors.primary} fillOpacity={0.2} />
+          <AppIcon
+            name={iconName}
+            size={28}
+            color={iconColors.primary}
+            fillOpacity={0.2}
+          />
         </IconContainer>
       </View>
 
-      <Text style={styles.equipmentTitle} numberOfLines={2}>{item.title}</Text>
+      <Text style={styles.equipmentTitle} numberOfLines={2}>
+        {item.title}
+      </Text>
 
       <View style={styles.equipmentBadges}>
         {item.badges.slice(0, 2).map((badge, idx) => (
@@ -276,7 +334,12 @@ function EquipmentCard({ item, onPress }: { item: DeviceItem; onPress: () => voi
       </View>
 
       <View style={styles.equipmentDelivery}>
-        <AppIcon name="flash" size={12} color={colors.success} fillOpacity={0.2} />
+        <AppIcon
+          name="flash"
+          size={12}
+          color={colors.success}
+          fillOpacity={0.2}
+        />
         <Text style={styles.equipmentDeliveryText}>{item.deliveryTime}</Text>
       </View>
     </AnimatedPressable>
@@ -287,8 +350,14 @@ function EquipmentCard({ item, onPress }: { item: DeviceItem; onPress: () => voi
 // HEALTH PACKAGE CARD
 // =============================================================================
 
-function PackageCard({ item, onPress }: { item: CarePackageItem; onPress: () => void }) {
-  const iconName = SERVICE_ICONS[item.icon] || 'healthcheck';
+function PackageCard({
+  item,
+  onPress,
+}: {
+  item: CarePackageItem;
+  onPress: () => void;
+}) {
+  const iconName = SERVICE_ICONS[item.icon] || "healthcheck";
   const iconColors = getIconColors(iconName);
 
   return (
@@ -299,19 +368,35 @@ function PackageCard({ item, onPress }: { item: CarePackageItem; onPress: () => 
         size="md"
         variant="soft"
         backgroundColor={iconColors.background}
-        withShadow={Platform.OS === 'ios'}
+        withShadow={Platform.OS === "ios"}
       >
-        <AppIcon name={iconName} size={22} color={iconColors.primary} fillOpacity={0.2} />
+        <AppIcon
+          name={iconName}
+          size={22}
+          color={iconColors.primary}
+          fillOpacity={0.2}
+        />
       </IconContainer>
 
-      <Text style={styles.packageTitle} numberOfLines={1}>{item.title}</Text>
-      <Text style={styles.packageSubtitle}>{item.includedCount} tests included</Text>
+      <Text style={styles.packageTitle} numberOfLines={1}>
+        {item.title}
+      </Text>
+      <Text style={styles.packageSubtitle}>
+        {item.includedCount} tests included
+      </Text>
 
       <View style={styles.packageIncludes}>
         {item.included.slice(0, 2).map((inc, idx) => (
           <View key={idx} style={styles.packageIncludeRow}>
-            <AppIcon name="check-circle" size={14} color={colors.success} fillOpacity={0.2} />
-            <Text style={styles.packageIncludeText} numberOfLines={1}>{inc.name}</Text>
+            <AppIcon
+              name="check-circle"
+              size={14}
+              color={colors.success}
+              fillOpacity={0.2}
+            />
+            <Text style={styles.packageIncludeText} numberOfLines={1}>
+              {inc.name}
+            </Text>
           </View>
         ))}
       </View>
@@ -374,53 +459,122 @@ function AppointmentCard() {
 // SUBSCRIPTION CARD - Premium Design
 // =============================================================================
 
-function SubscriptionCard({ plan, onPress }: { plan: SubscriptionPlan; onPress: () => void }) {
-  const getPlanConfig = (): { color: string; bgColor: string; gradientStart: string; icon: IconName; label: string } => {
+function SubscriptionCard({
+  plan,
+  onPress,
+}: {
+  plan: SubscriptionPlan;
+  onPress: () => void;
+}) {
+  const getPlanConfig = (): {
+    color: string;
+    bgColor: string;
+    gradientStart: string;
+    icon: IconName;
+    label: string;
+  } => {
     switch (plan.id) {
-      case 'ask_carebow':
-        return { color: '#8B5CF6', bgColor: '#F5F3FF', gradientStart: '#EDE9FE', icon: 'sparkles', label: 'AI Powered' };
-      case 'monthly':
-        return { color: '#3B82F6', bgColor: '#EFF6FF', gradientStart: '#DBEAFE', icon: 'calendar', label: 'Flexible' };
-      case 'half_yearly':
-        return { color: '#10B981', bgColor: '#ECFDF5', gradientStart: '#D1FAE5', icon: 'leaf', label: 'Best Value' };
-      case 'yearly':
-        return { color: '#F59E0B', bgColor: '#FFFBEB', gradientStart: '#FEF3C7', icon: 'trophy', label: 'Most Popular' };
+      case "ask_carebow":
+        return {
+          color: "#8B5CF6",
+          bgColor: "#F5F3FF",
+          gradientStart: "#EDE9FE",
+          icon: "sparkles",
+          label: "AI Powered",
+        };
+      case "monthly":
+        return {
+          color: "#3B82F6",
+          bgColor: "#EFF6FF",
+          gradientStart: "#DBEAFE",
+          icon: "calendar",
+          label: "Flexible",
+        };
+      case "half_yearly":
+        return {
+          color: "#10B981",
+          bgColor: "#ECFDF5",
+          gradientStart: "#D1FAE5",
+          icon: "leaf",
+          label: "Best Value",
+        };
+      case "yearly":
+        return {
+          color: "#F59E0B",
+          bgColor: "#FFFBEB",
+          gradientStart: "#FEF3C7",
+          icon: "trophy",
+          label: "Most Popular",
+        };
       default:
-        return { color: colors.accent, bgColor: colors.accentSoft, gradientStart: colors.accentMuted, icon: 'calendar', label: '' };
+        return {
+          color: colors.accent,
+          bgColor: colors.accentSoft,
+          gradientStart: colors.accentMuted,
+          icon: "calendar",
+          label: "",
+        };
     }
   };
   const config = getPlanConfig();
-  const discountPercent = plan.originalPrice > plan.price
-    ? Math.round(((plan.originalPrice - plan.price) / plan.originalPrice) * 100)
-    : 0;
+  const discountPercent =
+    plan.originalPrice > plan.price
+      ? Math.round(
+          ((plan.originalPrice - plan.price) / plan.originalPrice) * 100
+        )
+      : 0;
 
   return (
-    <AnimatedPressable onPress={onPress} style={[styles.subscriptionCard, { backgroundColor: config.bgColor }]}>
+    <AnimatedPressable
+      onPress={onPress}
+      style={[styles.subscriptionCard, { backgroundColor: config.bgColor }]}
+    >
       {/* Top label badge */}
       {config.label && (
-        <View style={[styles.subscriptionBadge, { backgroundColor: config.color }]}>
+        <View
+          style={[styles.subscriptionBadge, { backgroundColor: config.color }]}
+        >
           <Text style={styles.subscriptionBadgeText}>{config.label}</Text>
         </View>
       )}
 
       {/* Icon with gradient background */}
-      <View style={[styles.subscriptionIconWrap, { backgroundColor: config.gradientStart }]}>
+      <View
+        style={[
+          styles.subscriptionIconWrap,
+          { backgroundColor: config.gradientStart },
+        ]}
+      >
         <AppIcon name={config.icon} size={32} color={config.color} />
       </View>
 
       {/* Period label */}
       <Text style={[styles.subscriptionPeriodLabel, { color: config.color }]}>
-        {plan.billingPeriod === 'monthly' ? 'Monthly' : plan.billingPeriod === 'yearly' ? 'Yearly' : '6 Months'}
+        {plan.billingPeriod === "monthly"
+          ? "Monthly"
+          : plan.billingPeriod === "yearly"
+          ? "Yearly"
+          : "6 Months"}
       </Text>
 
       {/* Price section */}
       <View style={styles.subscriptionPriceSection}>
         <View style={styles.subscriptionPriceRow}>
-          <Text style={[styles.subscriptionPriceSymbol, { color: config.color }]}>$</Text>
-          <Text style={[styles.subscriptionPriceValue, { color: config.color }]}>{plan.price}</Text>
+          <Text
+            style={[styles.subscriptionPriceSymbol, { color: config.color }]}
+          >
+            $
+          </Text>
+          <Text
+            style={[styles.subscriptionPriceValue, { color: config.color }]}
+          >
+            {plan.price}
+          </Text>
         </View>
         {plan.originalPrice > plan.price && (
-          <Text style={styles.subscriptionOriginalPrice}>${plan.originalPrice}</Text>
+          <Text style={styles.subscriptionOriginalPrice}>
+            ${plan.originalPrice}
+          </Text>
         )}
       </View>
 
@@ -429,7 +583,7 @@ function SubscriptionCard({ plan, onPress }: { plan: SubscriptionPlan; onPress: 
         {[1, 2, 3, 4, 5].map((star) => (
           <AppIcon
             key={star}
-            name={star <= Math.floor(plan.rating) ? 'star-filled' : 'star'}
+            name={star <= Math.floor(plan.rating) ? "star-filled" : "star"}
             size={14}
             color="#F59E0B"
           />
@@ -440,7 +594,9 @@ function SubscriptionCard({ plan, onPress }: { plan: SubscriptionPlan; onPress: 
       {/* Discount badge */}
       {discountPercent > 0 && (
         <View style={styles.subscriptionDiscount}>
-          <Text style={styles.subscriptionDiscountText}>Save {discountPercent}%</Text>
+          <Text style={styles.subscriptionDiscountText}>
+            Save {discountPercent}%
+          </Text>
         </View>
       )}
     </AnimatedPressable>
@@ -454,16 +610,51 @@ function SubscriptionCard({ plan, onPress }: { plan: SubscriptionPlan; onPress: 
 function QuickActions() {
   const navigation = useNavigation() as AppNavigationProp;
 
-  const actions: { icon: IconName; label: string; screen: string; nested: boolean; color: string; bgColor: string }[] = [
-    { icon: 'receipt', label: 'Orders', screen: 'Orders', nested: false, color: '#3B82F6', bgColor: '#EFF6FF' },
-    { icon: 'document', label: 'Requests', screen: 'Requests', nested: false, color: '#8B5CF6', bgColor: '#F5F3FF' },
-    { icon: 'folder', label: 'Records', screen: 'HealthRecords', nested: true, color: '#10B981', bgColor: '#ECFDF5' },
-    { icon: 'help', label: 'Support', screen: 'Help', nested: true, color: '#F59E0B', bgColor: '#FFFBEB' },
+  const actions: {
+    icon: IconName;
+    label: string;
+    screen: string;
+    nested: boolean;
+    color: string;
+    bgColor: string;
+  }[] = [
+    {
+      icon: "receipt",
+      label: "Orders",
+      screen: "Orders",
+      nested: false,
+      color: "#3B82F6",
+      bgColor: "#EFF6FF",
+    },
+    {
+      icon: "document",
+      label: "Requests",
+      screen: "Requests",
+      nested: false,
+      color: "#8B5CF6",
+      bgColor: "#F5F3FF",
+    },
+    {
+      icon: "folder",
+      label: "Records",
+      screen: "HealthRecords",
+      nested: true,
+      color: "#10B981",
+      bgColor: "#ECFDF5",
+    },
+    {
+      icon: "help",
+      label: "Support",
+      screen: "Help",
+      nested: true,
+      color: "#F59E0B",
+      bgColor: "#FFFBEB",
+    },
   ];
 
-  const handleActionPress = (action: typeof actions[0]) => {
+  const handleActionPress = (action: (typeof actions)[0]) => {
     if (action.nested) {
-      navigation.navigate('Profile', { screen: action.screen });
+      navigation.navigate("Profile", { screen: action.screen });
     } else {
       navigation.navigate(action.screen);
     }
@@ -477,10 +668,14 @@ function QuickActions() {
           style={[styles.quickActionItem, { backgroundColor: action.bgColor }]}
           onPress={() => handleActionPress(action)}
         >
-          <View style={[styles.quickActionIcon, { backgroundColor: '#FFFFFF' }]}>
+          <View
+            style={[styles.quickActionIcon, { backgroundColor: "#FFFFFF" }]}
+          >
             <AppIcon name={action.icon} size={24} color={action.color} />
           </View>
-          <Text style={[styles.quickActionLabel, { color: action.color }]}>{action.label}</Text>
+          <Text style={[styles.quickActionLabel, { color: action.color }]}>
+            {action.label}
+          </Text>
         </AnimatedPressable>
       ))}
     </View>
@@ -524,8 +719,11 @@ export default function TodayScreen() {
             <Text style={styles.userName}>Sandeep</Text>
           </View>
           <Pressable
-            style={({ pressed }) => [styles.profileButton, pressed && styles.profilePressed]}
-            onPress={() => navigation.navigate('Profile')}
+            style={({ pressed }) => [
+              styles.profileButton,
+              pressed && styles.profilePressed,
+            ]}
+            onPress={() => navigation.navigate("Profile")}
           >
             <View style={styles.profileAvatar}>
               <Text style={styles.profileInitial}>S</Text>
@@ -534,19 +732,33 @@ export default function TodayScreen() {
         </View>
 
         {/* AI Assistant Hero */}
-        <HeroAICard onPress={() => navigation.navigate('Ask')} />
+        <HeroAICard onPress={() => navigation.navigate("Ask")} />
 
         {/* Emergency Card */}
-        <EmergencyCard onPress={() => navigation.navigate('Safety')} />
-
+        <EmergencyCard onPress={() => navigation.navigate("Safety")} />
+        <TouchableOpacity
+          style={{
+            width: "90%",
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: "#799EFF",
+            padding: 20,
+            borderRadius: 10,
+            alignSelf:'center'
+          }}
+          onPress={()=> navigation.navigate('VoiceCallPage')}
+        >
+          <Text style={{fontWeight:'bold',fontSize:20,color:'#fff'}}>Call</Text>
+        </TouchableOpacity>
         {/* Quick Services */}
         <View style={styles.section}>
           <SectionHeader
             title="Quick Services"
             subtitle="Book in minutes"
             actionLabel="See all"
-            onAction={() => navigation.navigate('Services')}
+            onAction={() => navigation.navigate("Services")}
           />
+
           <View style={styles.quickServicesGrid}>
             {quickPickItems.map((item) => (
               <QuickServiceCard
@@ -564,7 +776,7 @@ export default function TodayScreen() {
             title="Medical Equipment"
             subtitle="Rent or buy"
             actionLabel="View all"
-            onAction={() => navigation.navigate('Services')}
+            onAction={() => navigation.navigate("Services")}
           />
           <ScrollView
             horizontal
@@ -589,7 +801,7 @@ export default function TodayScreen() {
             title="Health Packages"
             subtitle="Comprehensive checkups"
             actionLabel="Explore"
-            onAction={() => navigation.navigate('Services')}
+            onAction={() => navigation.navigate("Services")}
           />
           <ScrollView
             horizontal
@@ -613,7 +825,7 @@ export default function TodayScreen() {
           <SectionHeader
             title="Upcoming"
             actionLabel="View all"
-            onAction={() => navigation.navigate('Schedule' as never)}
+            onAction={() => navigation.navigate("Schedule" as never)}
           />
           <AppointmentCard />
         </View>
@@ -624,7 +836,7 @@ export default function TodayScreen() {
             title="Care Plans"
             subtitle="Save with subscriptions"
             actionLabel="Compare"
-            onAction={() => navigation.navigate('Services')}
+            onAction={() => navigation.navigate("Services")}
           />
           <ScrollView
             horizontal
@@ -637,7 +849,9 @@ export default function TodayScreen() {
               <SubscriptionCard
                 key={plan.id}
                 plan={plan}
-                onPress={() => navigation.navigate('PlanDetails' as never, { id: plan.id })}
+                onPress={() =>
+                  navigation.navigate("PlanDetails" as never, { id: plan.id })
+                }
               />
             ))}
           </ScrollView>
@@ -660,7 +874,7 @@ export default function TodayScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAFBFC',
+    backgroundColor: "#FAFBFC",
   },
   scrollView: {
     flex: 1,
@@ -671,9 +885,9 @@ const styles = StyleSheet.create({
 
   // Header
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 24,
   },
   headerLeft: {
@@ -686,7 +900,7 @@ const styles = StyleSheet.create({
   },
   userName: {
     fontSize: 28,
-    fontWeight: '700',
+    fontWeight: "700",
     color: colors.textPrimary,
     letterSpacing: -0.5,
   },
@@ -701,8 +915,8 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: 24,
     backgroundColor: colors.accent,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     ...Platform.select({
       ios: {
         shadowColor: colors.accent,
@@ -717,8 +931,8 @@ const styles = StyleSheet.create({
   },
   profileInitial: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#FFF',
+    fontWeight: "600",
+    color: "#FFF",
   },
 
   // Hero AI Card
@@ -726,12 +940,12 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 20,
     marginBottom: 16,
-    overflow: 'hidden',
+    overflow: "hidden",
     minHeight: 100,
-    backgroundColor: '#0D9488',
+    backgroundColor: "#0D9488",
     ...Platform.select({
       ios: {
-        shadowColor: '#0D9488',
+        shadowColor: "#0D9488",
         shadowOffset: { width: 0, height: 8 },
         shadowOpacity: 0.35,
         shadowRadius: 16,
@@ -742,17 +956,17 @@ const styles = StyleSheet.create({
     }),
   },
   heroContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     zIndex: 1,
   },
   heroIconWrap: {
     width: 52,
     height: 52,
     borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(255,255,255,0.2)",
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: 16,
   },
   heroTextWrap: {
@@ -761,65 +975,65 @@ const styles = StyleSheet.create({
   },
   heroTitle: {
     fontSize: 18,
-    fontWeight: '700',
-    color: '#FFF',
+    fontWeight: "700",
+    color: "#FFF",
     marginBottom: 4,
   },
   heroSubtitle: {
     fontSize: 13,
-    color: 'rgba(255,255,255,0.85)',
+    color: "rgba(255,255,255,0.85)",
     lineHeight: 18,
   },
   heroArrow: {
-    position: 'absolute',
+    position: "absolute",
     right: 20,
-    top: '50%',
+    top: "50%",
     marginTop: -18,
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(255,255,255,0.2)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   heroDecor1: {
-    position: 'absolute',
+    position: "absolute",
     top: -30,
     right: -30,
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: "rgba(255,255,255,0.08)",
   },
   heroDecor2: {
-    position: 'absolute',
+    position: "absolute",
     bottom: -40,
     right: 40,
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: "rgba(255,255,255,0.05)",
   },
 
   // Emergency Card
   emergencyCard: {
     borderRadius: 16,
     marginBottom: 28,
-    overflow: 'hidden',
+    overflow: "hidden",
     borderWidth: 1,
     borderColor: colors.error,
-    backgroundColor: '#FEE2E2',
-    flexDirection: 'row',
-    alignItems: 'center',
+    backgroundColor: "#FEE2E2",
+    flexDirection: "row",
+    alignItems: "center",
     padding: 16,
   },
   emergencyIconWrap: {
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: '#FFF',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#FFF",
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: 12,
   },
   emergencyTextWrap: {
@@ -827,7 +1041,7 @@ const styles = StyleSheet.create({
   },
   emergencyTitle: {
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.textPrimary,
     marginBottom: 2,
   },
@@ -839,9 +1053,9 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#FFF',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#FFF",
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   // Section
@@ -849,9 +1063,9 @@ const styles = StyleSheet.create({
     marginBottom: 28,
   },
   sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
     marginBottom: 16,
   },
   sectionHeaderLeft: {
@@ -859,7 +1073,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 20,
-    fontWeight: '700',
+    fontWeight: "700",
     color: colors.textPrimary,
     letterSpacing: -0.3,
   },
@@ -869,8 +1083,8 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   sectionAction: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: 4,
     paddingHorizontal: 8,
     backgroundColor: colors.accentMuted,
@@ -879,19 +1093,19 @@ const styles = StyleSheet.create({
   },
   sectionActionText: {
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.accent,
   },
 
   // Quick Services Grid
   quickServicesGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 12,
   },
   quickServiceCard: {
     width: CARD_WIDTH,
-    backgroundColor: '#FFF',
+    backgroundColor: "#FFF",
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
@@ -900,7 +1114,7 @@ const styles = StyleSheet.create({
   },
   quickServiceTitle: {
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.textPrimary,
     marginTop: 12,
     marginBottom: 2,
@@ -911,29 +1125,29 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   quickServiceMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 6,
   },
   quickServicePrice: {
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: "700",
     color: colors.accent,
     marginBottom: 4,
   },
   quickServiceSlot: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
     backgroundColor: colors.successSoft,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
-    alignSelf: 'flex-start',
+    alignSelf: "flex-start",
   },
   quickServiceSlotText: {
     fontSize: 11,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.success,
   },
 
@@ -951,7 +1165,7 @@ const styles = StyleSheet.create({
   // Equipment Card
   equipmentCard: {
     width: 160,
-    backgroundColor: '#FFF',
+    backgroundColor: "#FFF",
     borderRadius: 16,
     padding: 14,
     borderWidth: 1,
@@ -963,31 +1177,31 @@ const styles = StyleSheet.create({
   },
   equipmentTitle: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.textPrimary,
     marginBottom: 8,
     minHeight: 36,
   },
   equipmentBadges: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 4,
     marginBottom: 10,
   },
   // Price with proper baseline alignment
   equipmentPricing: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
+    flexDirection: "row",
+    alignItems: "baseline",
     marginBottom: 6,
   },
   equipmentPriceSymbol: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.textPrimary,
   },
   equipmentPriceValue: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: "700",
     color: colors.textPrimary,
   },
   equipmentPriceUnit: {
@@ -996,20 +1210,20 @@ const styles = StyleSheet.create({
     marginLeft: 2,
   },
   equipmentDelivery: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
   },
   equipmentDeliveryText: {
     fontSize: 11,
-    fontWeight: '500',
+    fontWeight: "500",
     color: colors.success,
   },
 
   // Package Card
   packageCard: {
     width: 152,
-    backgroundColor: '#FFF',
+    backgroundColor: "#FFF",
     borderRadius: 16,
     padding: 14,
     borderWidth: 1,
@@ -1018,7 +1232,7 @@ const styles = StyleSheet.create({
   },
   packageTitle: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.textPrimary,
     marginTop: 10,
     marginBottom: 2,
@@ -1033,8 +1247,8 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   packageIncludeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
   },
   packageIncludeText: {
@@ -1044,8 +1258,8 @@ const styles = StyleSheet.create({
   },
   // Price with proper baseline alignment
   packagePricing: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
+    flexDirection: "row",
+    alignItems: "baseline",
     gap: 2,
   },
   packagePriceLabel: {
@@ -1055,18 +1269,18 @@ const styles = StyleSheet.create({
   },
   packagePriceSymbol: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.accent,
   },
   packagePriceValue: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: "700",
     color: colors.accent,
   },
 
   // Appointment Card
   appointmentCard: {
-    backgroundColor: '#FFF',
+    backgroundColor: "#FFF",
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
@@ -1077,14 +1291,14 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   appointmentLive: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
     backgroundColor: colors.accentMuted,
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 8,
-    alignSelf: 'flex-start',
+    alignSelf: "flex-start",
   },
   appointmentLiveDot: {
     width: 8,
@@ -1094,25 +1308,25 @@ const styles = StyleSheet.create({
   },
   appointmentLiveText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.accent,
   },
   appointmentBody: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   appointmentAvatar: {
     width: 52,
     height: 52,
     borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: 12,
     backgroundColor: colors.accentMuted,
   },
   appointmentAvatarText: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: "700",
     color: colors.accent,
   },
   appointmentInfo: {
@@ -1120,7 +1334,7 @@ const styles = StyleSheet.create({
   },
   appointmentDoctor: {
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.textPrimary,
     marginBottom: 2,
   },
@@ -1130,8 +1344,8 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   appointmentMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
   },
   appointmentMetaText: {
@@ -1146,8 +1360,8 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   joinButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
     paddingVertical: 10,
     paddingHorizontal: 16,
@@ -1167,8 +1381,8 @@ const styles = StyleSheet.create({
   },
   joinButtonText: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#FFF',
+    fontWeight: "600",
+    color: "#FFF",
   },
 
   // Subscription Card - Premium Design
@@ -1178,10 +1392,10 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingTop: 32,
     borderWidth: 0,
-    position: 'relative',
+    position: "relative",
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
+        shadowColor: "#000",
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.08,
         shadowRadius: 12,
@@ -1192,63 +1406,63 @@ const styles = StyleSheet.create({
     }),
   },
   subscriptionBadge: {
-    position: 'absolute',
+    position: "absolute",
     top: 10,
     left: 10,
     right: 10,
     paddingVertical: 4,
     paddingHorizontal: 8,
     borderRadius: 6,
-    alignItems: 'center',
+    alignItems: "center",
   },
   subscriptionBadgeText: {
     fontSize: 9,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    textTransform: 'uppercase',
+    fontWeight: "700",
+    color: "#FFFFFF",
+    textTransform: "uppercase",
     letterSpacing: 0.5,
   },
   subscriptionIconWrap: {
     width: 64,
     height: 64,
     borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    alignSelf: 'center',
+    justifyContent: "center",
+    alignItems: "center",
+    alignSelf: "center",
     marginBottom: 12,
   },
   subscriptionPeriodLabel: {
     fontSize: 16,
-    fontWeight: '700',
-    textAlign: 'center',
+    fontWeight: "700",
+    textAlign: "center",
     marginBottom: 8,
   },
   subscriptionPriceSection: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 8,
   },
   subscriptionPriceRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
+    flexDirection: "row",
+    alignItems: "baseline",
   },
   subscriptionPriceSymbol: {
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   subscriptionPriceValue: {
     fontSize: 28,
-    fontWeight: '800',
+    fontWeight: "800",
   },
   subscriptionOriginalPrice: {
     fontSize: 12,
     color: colors.textTertiary,
-    textDecorationLine: 'line-through',
-    textAlign: 'center',
+    textDecorationLine: "line-through",
+    textAlign: "center",
   },
   subscriptionRatingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: 2,
   },
   subscriptionReviewCount: {
@@ -1257,24 +1471,24 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   subscriptionDiscount: {
-    position: 'absolute',
+    position: "absolute",
     bottom: -8,
-    left: '50%',
+    left: "50%",
     transform: [{ translateX: -30 }],
-    backgroundColor: '#10B981',
+    backgroundColor: "#10B981",
     paddingVertical: 4,
     paddingHorizontal: 8,
     borderRadius: 10,
   },
   subscriptionDiscountText: {
     fontSize: 10,
-    fontWeight: '700',
-    color: '#FFFFFF',
+    fontWeight: "700",
+    color: "#FFFFFF",
   },
 
   // Quick Actions - Premium Design
   quickActions: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
   },
   quickActionItem: {
@@ -1282,10 +1496,10 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingVertical: 18,
     paddingHorizontal: 8,
-    alignItems: 'center',
+    alignItems: "center",
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
+        shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.06,
         shadowRadius: 8,
@@ -1299,12 +1513,12 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 14,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 10,
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
+        shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.06,
         shadowRadius: 4,
@@ -1316,6 +1530,6 @@ const styles = StyleSheet.create({
   },
   quickActionLabel: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });

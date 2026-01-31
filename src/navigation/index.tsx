@@ -15,6 +15,7 @@ import TabNavigator from './TabNavigator';
 // Screen imports
 import Login from '@/screens/Login';
 import Register from '@/screens/Register';
+import VoiceCallPage from '@/screens/VoiceCallPage';
 import AssessmentScreen from '../screens/AssessmentScreen';
 import CheckoutScreen from '../screens/CheckoutScreen';
 import ConversationScreen from '../screens/ConversationScreen';
@@ -32,7 +33,7 @@ import ServiceDetailsScreen from '../screens/ServiceDetailsScreen';
 import ServicesScreen from '../screens/ServicesScreen';
 import Splash from '../screens/Splash';
 import ThreadScreen from '../screens/ThreadScreen';
-
+import HomeScreen from '../screens/tabs/HomeScreen';
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function RootNavigator() {
@@ -170,6 +171,14 @@ export default function RootNavigator() {
           animation: 'slide_from_right',
         }}
       />
+      <Stack.Screen
+        name="VoiceCallPage"
+        component={VoiceCallPage}
+        options={{
+          animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen name="Home" component={HomeScreen} />
     </Stack.Navigator>
   );
 }

@@ -35,6 +35,8 @@ export type RootStackParamList = {
   Modal: undefined;
   // New screens
   HealthMemory: undefined;
+  VoiceCallPage:undefined;
+  Home:undefined;
   EpisodeSummary: { episodeId: string };
   Splash:undefined;
   Login:undefined;
